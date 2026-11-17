@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Moderación de preguntas · Gobierno de Esquina</title>
+<link rel="stylesheet" href="jornada.css">
+<style>
+ .wrap.wide{max-width:760px}
+ .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:22px 0 14px}
+ .tab{font-family:var(--font-heading);font-weight:800;font-size:15px;border:1.5px solid var(--blue-300);background:#fff;color:var(--blue-700);border-radius:999px;padding:8px 16px;cursor:pointer}
+ .tab[aria-pressed=true]{background:var(--brand);border-color:var(--brand);color:#fff}
+ .tab small{font-weight:700;opacity:.85;margin-left:4px}
+ .spacer{flex:1}
+ .q{background:#fff;border:1px solid var(--ink-200);border-radius:18px;box-shadow:var(--shadow-sm);padding:18px 18px 16px;margin:0 0 12px}
+ .q p{font-size:20px;line-height:1.35;color:var(--ink-900);margin:0 0 10px;font-weight:600;overflow-wrap:anywhere}
+ .meta{font-size:14px;color:var(--ink-600);display:flex;gap:6px 14px;flex-wrap:wrap;margin-bottom:12px}
+ .meta b{color:var(--blue-700)}
+ .acts{display:flex;gap:8px;flex-wrap:wrap}
+ .empty{text-align:center;color:var(--ink-600);padding:36px 10px;font-size:17px}
+ .login{max-width:360px;margin:40px auto}
+ .status{font-size:13px;color:var(--ink-500)}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap wide">
+  <img src="assets/emblema.png" alt="">
+  <div class="name"><b>ESQUINA</b><span>MODERACIÓN DE PREGUNTAS</span></div>
+</div></header>
+
+<main class="wrap wide">
+  <div class="card login" id="login"><div class="body">
+    <div class="field" style="margin:0 0 16px">
+      <label for="key">Clave de moderación</label>
+      <p class="hint">La encontrás en Apps Script, en Ver → Registros, después de correr inicializar().</p>
+      <input type="password" id="key" autocomplete="off">
+      <div class="err" id="keyErr">Esa clave no es correcta.</div>
+    </div>
+    <button class="btn block" id="go" type="button">Entrar</button>
+  </div></div>
+
+  <section id="panel" hidden>
+    <div class="bar">
+      <button class="tab" data-v="Pendiente" aria-pressed="true">Pendientes<small id="c1"></small></button>
+      <button class="tab" data-v="Leída" aria-pressed="false">Leídas<small id="c2"></small></button>
+      <button class="tab" data-v="Descartada" aria-pressed="false">Descartadas<small id="c3"></small></button>
+      <span class="spacer"></span>
+      <span class="status" id="st"></span>
+      <button class="btn ghost sm" id="refresh" type="button">Actualizar</button>
+    </div>
+    <div id="list"></div>
+  </section>
+</main>
+
+<footer class="foot"><div class="wrap"><b>ESQUINA, CRECIENDO JUNTO A VOS.</b><span>Se actualiza sola cada 8 segundos</span></div></footer>
+
+<script src="config.js"></script>
+<script>
+(function(){
+  var CFG = window.JORNADA || {}, $ = function(id){return document.getElementById(id)};
+  var key = '', data = [], view = 'Pendiente', timer = null;
+
+  function url(){ return CFG.APPS_SCRIPT_URL + '?action=preguntas&key=' + encodeURIComponent(key); }
+
+  function load(first){
+    return fetch(url()).then(function(r){return r.json()}).then(function(j){
+      if (!j.ok){ if (first){ $('keyErr').parentNode.classList.add('invalid'); } return false; }
+      data = j.preguntas; render();
+      $('st').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      return true;
+    }).catch(function(){ $('st').textContent = 'Sin conexión…'; return false; });
+  }
+
+  function render(){
+    ['Pendiente','Leída','Descartada'].forEach(function(e,i){
+      $('c'+(i+1)).textContent = '(' + data.filter(function(x){return x.estado===e}).length + ')';
+    });
+    var items = data.filter(function(x){return x.estado===view});
+    if (view !== 'Pendiente') items = items.slice().reverse();
+    var box = $('list'); box.innerHTML = '';
+    if (!items.length){ box.innerHTML = '<div class="empty">No hay preguntas en esta vista.</div>'; return; }
+    items.forEach(function(x){
+      var d = document.createElement('div'); d.className = 'q';
+      var p = document.createElement('p'); p.textContent = x.pregunta; d.appendChild(p);
+      var m = document.createElement('div'); m.className = 'meta';
+      m.innerHTML = '<span></span><span></span><span></span>';
+      m.children[0].textContent = x.nombre ? x.nombre : 'Anónima';
+      m.children[1].textContent = x.fecha.slice(11,16) + ' hs';
+      if (x.para){ m.children[2].innerHTML = 'Para <b></b>'; m.children[2].querySelector('b').textContent = x.para; } else m.removeChild(m.children[2]);
+      d.appendChild(m);
+      var a = document.createElement('div'); a.className = 'acts';
+      if (x.estado !== 'Leída') a.appendChild(btn('Marcar leída', x, 'Leída', false));
+      if (x.estado !== 'Descartada') a.appendChild(btn('Descartar', x, 'Descartada', true));
+      if (x.estado !== 'Pendiente') a.appendChild(btn('Volver a pendientes', x, 'Pendiente', true));
+      d.appendChild(a); box.appendChild(d);
+    });
+  }
+  function btn(txt, x, estado, ghost){
+    var b = document.createElement('button'); b.type='button'; b.className = 'btn sm' + (ghost?' ghost':''); b.textContent = txt;
+    b.onclick = function(){
+      x.estado = estado; render(); // optimista
+      fetch(CFG.APPS_SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({tipo:'estado', id:x.id, estado:estado, key:key})});
+    };
+    return b;
+  }
+
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.onclick = function(){ view = t.dataset.v; document.querySelectorAll('.tab').forEach(function(o){o.setAttribute('aria-pressed', o===t)}); render(); };
+  });
+  $('refresh').onclick = function(){ load(false); };
+
+  function enter(){
+    key = $('key').value.trim() || key;
+    if (!CFG.APPS_SCRIPT_URL || CFG.APPS_SCRIPT_URL.indexOf('PEGAR_ACA')===0){ alert('Falta la URL de Apps Script en config.js'); return; }
+    load(true).then(function(ok){
+      if (!ok) return;
+      try{ sessionStorage.setItem('mkey', key); }catch(e){}
+      $('login').hidden = true; $('panel').hidden = false;
+      timer = setInterval(function(){ load(false); }, 8000);
+    });
+  }
+  $('go').onclick = enter;
+  $('key').addEventListener('keydown', function(e){ if (e.key==='Enter') enter(); });
+
+  // clave por hash (#k=...) o sesión, para no tipearla en el celu
+  var m = /[#&]k=([^&]+)/.exec(location.hash);
+  var saved = ''; try{ saved = sessionStorage.getItem('mkey') || ''; }catch(e){}
+  var pre = m ? decodeURIComponent(m[1]) : saved;
+  if (pre){ $('key').value = pre; key = pre; if (m) history.replaceState(null,'',location.pathname); enter(); }
+})();
+</script>
+</body>
+</html>

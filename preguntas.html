@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Preguntas a las expositoras · Gobierno de Esquina</title>
+<meta name="theme-color" content="#1fa3ec">
+<link rel="stylesheet" href="jornada.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <img src="assets/emblema.png" alt="">
+  <div class="name"><b>ESQUINA</b><span>GOBIERNO</span></div>
+</div></header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="dir-logo"><img src="assets/logo-emprendedores.png" alt="Dirección de Emprendedores"></div>
+    <div><span class="eyebrow">Jornada Mujer Emprendedora</span></div>
+    <h1 style="margin-top:14px">Tu pregunta a las <span class="box">expositoras</span></h1>
+    <p class="sub">Escribí lo que quieras saber. Las leemos durante la charla.</p>
+    <div class="rule"></div>
+  </section>
+
+  <div class="card">
+    <form id="f" novalidate autocomplete="off">
+      <div class="form-err" id="formErr" role="alert"></div>
+
+      <div class="field" data-f="para" id="paraBox" style="display:none">
+        <label for="para">¿Para quién es?</label>
+        <select id="para"></select>
+      </div>
+
+      <div class="field" data-f="pregunta">
+        <label for="pregunta">Tu pregunta <span class="req">*</span></label>
+        <textarea id="pregunta" maxlength="400" placeholder="Escribí tu pregunta acá"></textarea>
+        <div class="count"><span id="cnt">0</span>/400</div>
+        <div class="err">Escribí tu pregunta (mínimo 5 caracteres).</div>
+      </div>
+
+      <div class="field" data-f="nombre">
+        <label for="nombre">Tu nombre</label>
+        <p class="hint">Opcional. Si lo dejás vacío, la pregunta se lee de forma anónima.</p>
+        <input type="text" id="nombre" maxlength="60" autocomplete="given-name">
+      </div>
+
+      <div class="hp" aria-hidden="true"><label>Web <input type="text" id="web" tabindex="-1" autocomplete="off"></label></div>
+
+      <button class="btn block" id="send" type="submit"><span id="sendTxt">Enviar pregunta</span></button>
+    </form>
+
+    <div class="done" id="done" role="status">
+      <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <h2>¡Pregunta enviada!</h2>
+      <p>La van a ver quienes moderan. Si querés, mandá otra.</p>
+      <button class="btn ghost" id="otra" type="button">Hacer otra pregunta</button>
+    </div>
+  </div>
+</main>
+
+<footer class="foot"><div class="wrap"><b>ESQUINA, CRECIENDO JUNTO A VOS.</b><span>Municipalidad de la Ciudad de Esquina · Dirección de Emprendedores</span></div></footer>
+
+<script src="config.js"></script>
+<script>
+(function(){
+  var CFG = window.JORNADA || {};
+  var $ = function(id){return document.getElementById(id)};
+
+  if (CFG.EXPOSITORAS && CFG.EXPOSITORAS.length){
+    $('paraBox').style.display = '';
+    var s = $('para');
+    var all = document.createElement('option'); all.value=''; all.textContent='Para todas las expositoras'; s.appendChild(all);
+    CFG.EXPOSITORAS.forEach(function(n){ var o=document.createElement('option'); o.value=n; o.textContent=n; s.appendChild(o); });
+  }
+  $('pregunta').addEventListener('input', function(){ this.closest('.field').classList.remove('invalid'); $('cnt').textContent = this.value.length; });
+
+  $('f').addEventListener('submit', function(ev){
+    ev.preventDefault();
+    var q = $('pregunta').value.trim();
+    var fe = $('formErr');
+    var field = document.querySelector('[data-f=pregunta]');
+    var bad = q.length < 5;
+    field.classList.toggle('invalid', bad);
+    if (bad){ fe.textContent='Revisá el campo marcado en rojo.'; fe.classList.add('on'); return; }
+    fe.classList.remove('on');
+    if (!CFG.APPS_SCRIPT_URL || CFG.APPS_SCRIPT_URL.indexOf('PEGAR_ACA')===0){
+      fe.textContent='El formulario todavía no está conectado (falta la URL en config.js).'; fe.classList.add('on'); return;
+    }
+    var payload = {tipo:'pregunta', web:$('web').value, pregunta:q, nombre:$('nombre').value.trim(), para:$('para').value||''};
+    var btn=$('send'); btn.disabled=true; $('sendTxt').textContent='Enviando…';
+    fetch(CFG.APPS_SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload)})
+      .then(function(){ $('f').style.display='none'; $('done').classList.add('on'); window.scrollTo({top:0,behavior:'smooth'}); })
+      .catch(function(){
+        btn.disabled=false; $('sendTxt').textContent='Enviar pregunta';
+        fe.textContent='No pudimos enviar tu pregunta. Revisá tu conexión y probá de nuevo.'; fe.classList.add('on');
+      });
+  });
+
+  $('otra').addEventListener('click', function(){
+    $('pregunta').value=''; $('cnt').textContent='0';
+    var b=$('send'); b.disabled=false; $('sendTxt').textContent='Enviar pregunta';
+    $('done').classList.remove('on'); $('f').style.display='';
+    $('pregunta').focus();
+  });
+})();
+</script>
+</body>
+</html>
