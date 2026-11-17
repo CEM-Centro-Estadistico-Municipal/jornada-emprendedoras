@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Encuesta de satisfacción · Jornada Día de la Mujer Emprendedora · Gobierno de Esquina</title>
+<meta name="theme-color" content="#1fa3ec">
+<link rel="stylesheet" href="jornada.css">
+<style>
+ .scale{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px}
+ .rate{position:relative;display:block;cursor:pointer}
+ .rate input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer}
+ .rate span{display:flex;align-items:center;justify-content:center;height:58px;border:1.5px solid var(--ink-300);border-radius:14px;background:#fff;font-family:var(--font-heading);font-weight:800;font-size:22px;color:var(--ink-800);transition:background .14s var(--ease),border-color .14s var(--ease),transform .14s var(--ease)}
+ .rate:hover span{border-color:var(--brand)}
+ .rate input:checked+span{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:var(--shadow-brand)}
+ .rate input:focus-visible+span{box-shadow:0 0 0 3px rgba(64,178,244,.45)}
+ .rate:active span{transform:scale(.96)}
+ .ends{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--ink-600);margin-top:6px}
+ .invalid .rate span{border-color:var(--red-500)}
+ .sect{font-family:var(--font-heading);font-weight:900;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue-700);margin:6px 0 14px;padding-top:20px;border-top:1px solid var(--ink-200)}
+ .two{display:grid;gap:14px}
+ .fine{font-size:13px;color:var(--ink-600);margin:-6px 0 22px}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <img src="assets/emblema.png" alt="">
+  <div class="name"><b>ESQUINA</b><span>GOBIERNO</span></div>
+</div></header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="dir-logo"><img src="assets/logo-emprendedores.png" alt="Dirección de Emprendedores"></div>
+    <h1>Gracias por <span class="box">participar</span></h1>
+    <p class="sub">Queremos saber qué te pareció la jornada y seguir en contacto para futuras actividades. Contanos.</p>
+    <div class="rule"></div>
+  </section>
+
+  <div class="card">
+    <form id="f" novalidate autocomplete="off">
+      <div class="form-err" id="formErr" role="alert"></div>
+
+      <fieldset class="field" data-f="disfrute">
+        <legend>¿Cuánto disfrutaste la jornada? <span class="req">*</span></legend>
+        <div class="scale" id="s1"></div>
+        <div class="ends"><span>Nada</span><span>Muchísimo</span></div>
+        <div class="err">Elegí un valor del 1 al 5.</div>
+      </fieldset>
+
+      <fieldset class="field" data-f="relevancia">
+        <legend>¿Te parecieron relevantes las exposiciones? <span class="req">*</span></legend>
+        <div class="scale" id="s2"></div>
+        <div class="ends"><span>Nada relevantes</span><span>Muy relevantes</span></div>
+        <div class="err">Elegí un valor del 1 al 5.</div>
+      </fieldset>
+
+      <div class="field" data-f="agregar">
+        <label for="agregar">¿Qué más agregarías a futuros encuentros?</label>
+        <p class="hint">Opcional. Temas, formatos, invitadas, horarios… lo que se te ocurra.</p>
+        <textarea id="agregar" maxlength="600"></textarea>
+        <div class="count"><span id="cnt">0</span>/600</div>
+      </div>
+
+      <div class="sect">Seguimos en contacto</div>
+      <p class="hint" style="margin-top:-6px">Dejanos tus datos para avisarte de próximas actividades. Completá el mail, el teléfono o los dos.</p>
+
+      <div class="field" data-f="contacto">
+        <div class="two">
+          <div><label for="nombre" style="display:block;font-weight:800;font-family:var(--font-heading);margin-bottom:4px">Nombre</label><input type="text" id="nombre" maxlength="80" autocomplete="name"></div>
+          <div><label for="email" style="display:block;font-weight:800;font-family:var(--font-heading);margin-bottom:4px">Correo electrónico</label><input type="text" id="email" inputmode="email" autocomplete="email" maxlength="80" placeholder="nombre@ejemplo.com"></div>
+          <div><label for="tel" style="display:block;font-weight:800;font-family:var(--font-heading);margin-bottom:4px">Teléfono o WhatsApp</label><input type="text" id="tel" inputmode="tel" autocomplete="tel" maxlength="30" placeholder="Ej. 3777 123456"></div>
+        </div>
+        <div class="err" id="contactoErr">Revisá el correo o el teléfono.</div>
+      </div>
+      <p class="fine">Usamos tus datos solo para avisarte de actividades de la Dirección de Emprendedores.</p>
+
+      <div class="hp" aria-hidden="true"><label>Web <input type="text" id="web" tabindex="-1" autocomplete="off"></label></div>
+
+      <button class="btn block" id="send" type="submit"><span id="sendTxt">Enviar encuesta</span></button>
+    </form>
+
+    <div class="done" id="done" role="status">
+      <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <h2>¡Gracias!</h2>
+      <p>Tu opinión nos ayuda a mejorar. Nos vemos en la próxima.</p>
+    </div>
+  </div>
+</main>
+
+<footer class="foot"><div class="wrap"><b>ESQUINA, CRECIENDO JUNTO A VOS.</b><span>Municipalidad de la Ciudad de Esquina · Dirección de Emprendedores</span></div></footer>
+
+<script src="config.js"></script>
+<script>
+(function(){
+  var CFG = window.JORNADA || {};
+  var $ = function(id){return document.getElementById(id)};
+
+  function scale(boxId, name){
+    var h = '';
+    for (var i=1;i<=5;i++) h += '<label class="rate"><input type="radio" name="'+name+'" value="'+i+'" aria-label="'+i+' de 5"><span>'+i+'</span></label>';
+    $(boxId).innerHTML = h;
+  }
+  scale('s1','disfrute'); scale('s2','relevancia');
+
+  $('agregar').addEventListener('input', function(){ $('cnt').textContent = this.value.length; });
+  document.addEventListener('input', function(e){ var f=e.target.closest&&e.target.closest('.field'); if(f) f.classList.remove('invalid'); if(!document.querySelector('.invalid')) $('formErr').classList.remove('on'); });
+  document.addEventListener('change', function(e){ var f=e.target.closest&&e.target.closest('.field'); if(f) f.classList.remove('invalid'); if(!document.querySelector('.invalid')) $('formErr').classList.remove('on'); });
+  function mark(name, bad){ document.querySelector('[data-f="'+name+'"]').classList.toggle('invalid', bad); return bad; }
+  function val(name){ var c=document.querySelector('input[name='+name+']:checked'); return c ? parseInt(c.value,10) : 0; }
+
+  $('f').addEventListener('submit', function(ev){
+    ev.preventDefault();
+    var email = $('email').value.trim(), tel = $('tel').value.trim();
+    var emailBad = email !== '' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+    var telBad = tel !== '' && tel.replace(/\D/g,'').length < 6;
+    $('contactoErr').textContent = emailBad ? 'El correo no parece válido.' : 'El teléfono parece incompleto.';
+    var bad = [
+      mark('disfrute', !val('disfrute')),
+      mark('relevancia', !val('relevancia')),
+      mark('contacto', emailBad || telBad)
+    ].some(Boolean);
+    var fe = $('formErr');
+    if (bad){
+      fe.textContent = 'Revisá los campos marcados en rojo.'; fe.classList.add('on');
+      var first = document.querySelector('.invalid'); if (first) first.scrollIntoView({behavior:'smooth',block:'center'});
+      return;
+    }
+    fe.classList.remove('on');
+    if (!CFG.APPS_SCRIPT_URL || CFG.APPS_SCRIPT_URL.indexOf('PEGAR_ACA')===0){
+      fe.textContent = 'El formulario todavía no está conectado (falta la URL en config.js).'; fe.classList.add('on'); return;
+    }
+    var payload = {
+      tipo:'encuesta', web:$('web').value,
+      disfrute:val('disfrute'), relevancia:val('relevancia'),
+      agregar:$('agregar').value.trim(),
+      nombre:$('nombre').value.trim(), email:email, telefono:tel
+    };
+    var btn = $('send'); btn.disabled = true; $('sendTxt').textContent = 'Enviando…';
+    fetch(CFG.APPS_SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload)})
+      .then(function(){ $('f').style.display='none'; $('done').classList.add('on'); window.scrollTo({top:0,behavior:'smooth'}); })
+      .catch(function(){
+        btn.disabled = false; $('sendTxt').textContent = 'Enviar encuesta';
+        fe.textContent = 'No pudimos enviar la encuesta. Revisá tu conexión y probá de nuevo.'; fe.classList.add('on');
+      });
+  });
+})();
+</script>
+</body>
+</html>
